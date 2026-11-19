@@ -1,0 +1,15 @@
+{
+  "id": "ce55577f-57c4-4622-8ecf-6082f9fb9d84",
+  "name": "Tech Challenge FIAP - Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-11-19T00:00:00.000Z",
+  "_postman_exported_using": "Postman/11"
+}

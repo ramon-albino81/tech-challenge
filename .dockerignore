@@ -1,0 +1,12 @@
+.git
+.idea
+.vscode
+.agents
+.env
+.env.*
+target
+docs
+openspec
+postman
+*.pdf
+*.log

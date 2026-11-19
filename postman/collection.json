@@ -1,0 +1,9 @@
+{
+  "info": {
+    "_postman_id": "62d9c8c0-7da5-4db4-b119-c13ad5a3b910",
+    "name": "Tech Challenge FIAP - API de usuários",
+    "description": "Coleção inicial. Os cenários serão adicionados junto com os contratos da API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": []
+}

@@ -13,7 +13,7 @@
 ## 2. Fundação e estrutura do repositório
 
 - [x] 2.1 Adicionar dependências de Spring MVC, validação, Spring Security resource server/JWT, Spring Data JPA, MySQL Connector/J, suporte Flyway para MySQL, springdoc, JUnit, Mockito e Testcontainers; verificar `./mvnw dependency:resolve`.
-- [ ] 2.2 Criar e manter a estrutura sugerida `src/`, `postman/collection.json`, `postman/environment.json`, `docs/`, `Dockerfile`, `docker-compose.yml`, `.env.example`, `.gitignore` e `README.md`; verificar a presença dos caminhos e que arquivos sensíveis/build, incluindo `.env`, `target/` e `.idea/`, estão ignorados.
+- [x] 2.2 Criar e manter a estrutura sugerida `src/`, `postman/collection.json`, `postman/environment.json`, `docs/`, `Dockerfile`, `docker-compose.yml`, `.env.example`, `.gitignore` e `README.md`; verificar a presença dos caminhos e que arquivos sensíveis/build, incluindo `.env`, `target/` e `.idea/`, estão ignorados.
 
 ## 3. Modelo, banco e casos de uso
 
@@ -39,8 +39,8 @@
 
 ## 6. Docker e configuração
 
-- [ ] 6.1 Aplicar `/multi-stage-dockerfile`; criar Dockerfile obrigatoriamente multi-stage, versões de imagem fixadas, runtime mínimo e usuário não root, além de `.dockerignore`; verificar compilação da imagem e ausência de arquivos/segredos indevidos no contexto.
-- [ ] 6.2 Aplicar `/mysql`; criar exatamente `docker-compose.yml` com aplicação e MySQL 8.4 em contêineres, imagem fixada, health check e configuração por ambiente; criar `.env.example` sem credenciais reais; verificar `docker compose config`.
+- [x] 6.1 Aplicar `/multi-stage-dockerfile`; criar Dockerfile obrigatoriamente multi-stage, versões de imagem fixadas, runtime mínimo e usuário não root, além de `.dockerignore`; verificar compilação da imagem e ausência de arquivos/segredos indevidos no contexto.
+- [x] 6.2 Aplicar `/mysql`; criar exatamente `docker-compose.yml` com aplicação e MySQL 8.4 em contêineres, imagem fixada, health check e configuração por ambiente; criar `.env.example` sem credenciais reais; verificar `docker compose config`.
 - [ ] 6.3 Executar `docker compose up --build` em ambiente limpo com configuração de exemplo não produtiva; verificar prontidão da aplicação/banco, criação da conta de avaliação, login JWT e chamadas protegidas funcionais.
 
 ## 7. README, relatório e repositório
