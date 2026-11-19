@@ -12,7 +12,7 @@
 
 ## 2. Fundação e estrutura do repositório
 
-- [ ] 2.1 Adicionar dependências de Spring MVC, validação, Spring Security resource server/JWT, Spring Data JPA, MySQL Connector/J, suporte Flyway para MySQL, springdoc, JUnit, Mockito e Testcontainers; verificar `./mvnw dependency:resolve`.
+- [x] 2.1 Adicionar dependências de Spring MVC, validação, Spring Security resource server/JWT, Spring Data JPA, MySQL Connector/J, suporte Flyway para MySQL, springdoc, JUnit, Mockito e Testcontainers; verificar `./mvnw dependency:resolve`.
 - [ ] 2.2 Criar e manter a estrutura sugerida `src/`, `postman/collection.json`, `postman/environment.json`, `docs/`, `Dockerfile`, `docker-compose.yml`, `.env.example`, `.gitignore` e `README.md`; verificar a presença dos caminhos e que arquivos sensíveis/build, incluindo `.env`, `target/` e `.idea/`, estão ignorados.
 
 ## 3. Modelo, banco e casos de uso
