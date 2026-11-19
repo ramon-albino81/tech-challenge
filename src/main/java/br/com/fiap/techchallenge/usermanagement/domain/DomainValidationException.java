@@ -1,0 +1,8 @@
+package br.com.fiap.techchallenge.usermanagement.domain;
+
+public final class DomainValidationException extends IllegalArgumentException {
+
+	public DomainValidationException(String message) {
+		super(message);
+	}
+}
