@@ -17,7 +17,7 @@
 
 ## 3. Modelo, banco e casos de uso
 
-- [ ] 3.1 Implementar `User`, `Address` e `UserType`, com nome, e-mail, login, senha, tipo, data/hora de última alteração e endereço com rua, número, cidade e CEP; verificar testes JUnit para campos ausentes, formatos inválidos e tipos permitidos.
+- [x] 3.1 Implementar `User`, `Address` e `UserType`, com nome, e-mail, login, senha, tipo, data/hora de última alteração e endereço com rua, número, cidade e CEP; verificar testes JUnit para campos ausentes, formatos inválidos e tipos permitidos.
 - [ ] 3.2 Aplicar `/mysql` e `/java-springboot`; criar migração Flyway para MySQL 8.4/InnoDB com `id BIGINT UNSIGNED AUTO_INCREMENT`, charset/collation `utf8mb4`/`utf8mb4_0900_ai_ci`, colunas `name VARCHAR(150)`, `email VARCHAR(254)`, `login VARCHAR(100)`, `password_hash VARCHAR(255)`, `user_type VARCHAR(32)`, `last_modified_at DATETIME(6)` em UTC e, logo após, `address JSON NOT NULL` contendo strings não vazias `street`, `number`, `city` e `postal_code`; aplicar unicidade a e-mail/login normalizados e `CHECK` ao tipo e estrutura do JSON; alinhar validações da API aos comprimentos; verificar migração em MySQL e correspondência dos mapeamentos JPA.
 - [ ] 3.3 Implementar criação somente por `DONO_RESTAURANTE`, normalização de e-mail/login, armazenamento de hash e tratamento específico de duplicidade; verificar testes de sucesso, campos ausentes, e-mail/login duplicados, senha nunca em texto puro e resposta sem senha/hash.
 - [ ] 3.4 Implementar atualização de perfil sem senha/tipo, alteração separada da própria senha com confirmação da atual, e atualização de `last_modified_at` na criação e em cada alteração; verificar testes de sucesso e erro em cada fluxo e rejeição de senha atual incorreta.
