@@ -1,0 +1,12 @@
+{
+	"chat.tools.terminal.autoApprove": {
+		"/^pdftotext -layout docs/Tech-Challenge-Fase-01-v1\\.3\\.pdf - \\| awk 'NR>=261 && NR<=390'$/": {
+			"approve": true,
+			"matchCommandLine": true
+		},
+		"/^pdftotext -layout docs/Tech-Challenge-Fase-01-v1\\.3\\.pdf - \\| awk 'NR>=131 && NR<=260'$/": {
+			"approve": true,
+			"matchCommandLine": true
+		}
+	}
+}
