@@ -1,6 +1,6 @@
 # Tech Challenge FIAP — API de gerenciamento de usuários
 
-Projeto individual do Tech Challenge FIAP Fase 1. A API está em desenvolvimento; neste estágio, o repositório contém a base Spring Boot e o ambiente local com MySQL. As operações de gerenciamento de usuários e o login JWT ainda serão implementados.
+Projeto individual do Tech Challenge FIAP Fase 1. A API está em desenvolvimento e utiliza Spring Boot, MySQL e Flyway para persistência, com autenticação JWT e uma conta de avaliação local criada automaticamente.
 
 ## Tecnologias
 
@@ -27,7 +27,14 @@ Copie o arquivo de exemplo para a configuração local:
 cp .env.example .env
 ```
 
-Os valores de `.env.example` são apenas placeholders para desenvolvimento local, não são credenciais de avaliação e não devem ser usados em produção. Altere as senhas locais antes de iniciar os contêineres.
+Os valores de `.env.example` são exclusivamente para desenvolvimento e avaliação local, não devem ser usados em produção. Altere as senhas e a chave JWT antes de iniciar os contêineres. O perfil `evaluation` cria de forma idempotente uma conta `DONO_RESTAURANTE` no banco vazio; o banco guarda somente o hash BCrypt da senha.
+
+Credenciais locais de avaliação do arquivo de exemplo:
+
+- Login: `avaliador`
+- Senha: `AvaliacaoLocal!2026`
+
+Esses valores são públicos e não podem ser reutilizados em produção.
 
 Inicie a aplicação e o MySQL:
 
@@ -68,7 +75,7 @@ Para validar a compilação, os testes e o empacotamento:
 
 ## Documentação e API
 
-A URL prevista para a interface Swagger é `http://localhost:8080/swagger-ui.html`. As rotas e o fluxo de autenticação serão documentados quando os contratos da API forem implementados.
+A interface Swagger fica em `http://localhost:8080/swagger-ui.html`. Para obter um JWT, envie `POST /api/v1/auth/login` com `{"login":"avaliador","password":"AvaliacaoLocal!2026"}`. Use o campo `accessToken` da resposta como bearer token nas rotas protegidas. O token expira em 15 minutos. A documentação Swagger e seus endpoints podem ser desativados em produção por `SWAGGER_ENABLED=false`; o perfil `prod` já os desativa.
 
 ## Integrante
 

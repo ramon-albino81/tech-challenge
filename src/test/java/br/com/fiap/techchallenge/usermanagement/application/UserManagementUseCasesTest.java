@@ -3,7 +3,6 @@ package br.com.fiap.techchallenge.usermanagement.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -142,6 +141,18 @@ class UserManagementUseCasesTest {
 								UserType.CLIENTE, ADDRESS)));
 
 		verify(passwordHasher, never()).hash("curta");
+	}
+
+	@Test
+	void createRejectsPasswordsLongerThanBcryptByteLimit() {
+		String tooLong = "é".repeat(37);
+		assertThrows(
+				DomainValidationException.class,
+				() -> new CreateUser(users, passwordHasher, transactions, clock).execute(
+						OWNER,
+						new CreateUserCommand("Maria", "maria@example.com", "maria", tooLong,
+								UserType.CLIENTE, ADDRESS)));
+		verify(passwordHasher, never()).hash(tooLong);
 	}
 
 	@Test

@@ -26,9 +26,9 @@
 
 ## 4. JWT e autorização
 
-- [ ] 4.1 Configurar login público, emissão/validação JWT Nimbus com Spring Security, BCrypt, chave HMAC externa de pelo menos 256 bits, validade de 15 minutos e claims de identificador/tipo; verificar testes de login válido/inválido, mensagem genérica, token ausente, inválido, expirado e permissões.
-- [ ] 4.2 Implementar seed idempotente de `DONO_RESTAURANTE` somente em perfis de desenvolvimento/avaliação, com credenciais configuráveis e senha em hash; verificar conta em banco limpo, ausência do seed em produção e nenhuma duplicação/redefinição após reiniciar.
-- [ ] 4.3 Aplicar autorização: dono administra perfis e usuários; cliente atua somente sobre a própria conta; toda pessoa altera somente a própria senha; somente dono cria e escolhe tipo; verificar `401` para não autenticado e `403` para cada ação não autorizada.
+- [x] 4.1 Configurar login público, emissão/validação JWT Nimbus com Spring Security, BCrypt, chave HMAC externa de pelo menos 256 bits, validade de 15 minutos e claims de identificador/tipo; verificar testes de login válido/inválido, mensagem genérica, token ausente, inválido, expirado e permissões.
+- [x] 4.2 Implementar seed idempotente de `DONO_RESTAURANTE` somente em perfis de desenvolvimento/avaliação, com credenciais configuráveis e senha em hash; verificar conta em banco limpo, ausência do seed em produção e nenhuma duplicação/redefinição após reiniciar.
+- [x] 4.3 Aplicar autorização: dono administra perfis e usuários; cliente atua somente sobre a própria conta; toda pessoa altera somente a própria senha; somente dono cria e escolhe tipo; verificar `401` para não autenticado e `403` para cada ação não autorizada.
 
 ## 5. API, erros e documentação
 
