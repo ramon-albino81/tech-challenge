@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 import br.com.fiap.techchallenge.usermanagement.application.exception.InvalidCurrentPasswordException;
+import br.com.fiap.techchallenge.usermanagement.application.exception.UserForbiddenException;
 import br.com.fiap.techchallenge.usermanagement.application.exception.UserNotFoundException;
 import br.com.fiap.techchallenge.usermanagement.application.model.UserActor;
 import br.com.fiap.techchallenge.usermanagement.application.port.out.PasswordHasher;
@@ -33,12 +34,22 @@ public final class ChangeOwnPassword {
 
 	public void execute(UserActor actor, String currentPassword, String newPassword) {
 		transactions.required(() -> {
-			change(actor, currentPassword, newPassword);
+			change(actor, actor.userId(), currentPassword, newPassword);
 			return null;
 		});
 	}
 
-	private void change(UserActor actor, String currentPassword, String newPassword) {
+	public void execute(UserActor actor, long targetUserId, String currentPassword, String newPassword) {
+		transactions.required(() -> {
+			change(actor, targetUserId, currentPassword, newPassword);
+			return null;
+		});
+	}
+
+	private void change(UserActor actor, long targetUserId, String currentPassword, String newPassword) {
+		if (actor.userId() != targetUserId) {
+			throw new UserForbiddenException();
+		}
 		CreateUser.validatePassword(newPassword);
 		User current = users.findById(actor.userId()).orElseThrow(UserNotFoundException::new);
 		if (currentPassword == null || !passwordHasher.matches(currentPassword, current.passwordHash())) {

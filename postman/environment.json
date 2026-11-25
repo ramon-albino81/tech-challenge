@@ -7,6 +7,72 @@
       "value": "http://localhost:8080",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "evaluationLogin",
+      "value": "avaliador",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "evaluationPassword",
+      "value": "AvaliacaoLocal!2026",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "ownerToken",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "ownerId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "runId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "createdUserId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientLogin",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientToken",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientPassword",
+      "value": "ClientPass123!",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "newClientPassword",
+      "value": "ClientPass456!",
+      "type": "default",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment",

@@ -230,12 +230,12 @@ class JpaUserStoreIntegrationTest {
 						.header("Authorization", "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{}"))
-				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
 		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 						.get("/api/v1/users")
 						.param("name", "Maria")
 						.header("Authorization", "Bearer " + token))
-				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
 	}
 
 	@Test
@@ -257,7 +257,23 @@ class JpaUserStoreIntegrationTest {
 		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/v3/api-docs"))
 				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
 				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
-						"$.paths['/api/v1/auth/login'].post").exists());
+						"$.paths['/api/v1/auth/login'].post").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users'].post.responses['201'].content['application/json'].example").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users'].post.responses['409'].content['application/problem+json'].example").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users/{id}'].put").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users/{id}/password'].put").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users/{id}'].delete").exists())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.components.securitySchemes.bearerAuth.type").value("http"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+						"$.paths['/api/v1/users'].post.security[0].bearerAuth").exists());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/swagger-ui.html"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().is3xxRedirection());
 	}
 
 	@Test
@@ -416,6 +432,202 @@ class JpaUserStoreIntegrationTest {
 						.param("name", "Maria")
 						.header("Authorization", "Bearer " + token))
 				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
+	}
+
+	@Test
+	void managesUsersThroughHttpAndEnforcesOwnershipAndSafeResponses() throws Exception {
+		String ownerToken = loginToken("avaliador.integration", "AvaliacaoLocal!2026");
+		String suffix = java.util.UUID.randomUUID().toString();
+		String login = "client." + suffix;
+		String email = login + "@example.invalid";
+		String initialPassword = "ClientPass123!";
+		String createBody = """
+				{
+				  "name": "Cliente API %s",
+				  "email": "%s",
+				  "password": "%s",
+				  "login": "%s",
+				  "type": "CLIENTE",
+				  "address": {
+				    "street": "Rua API",
+				    "number": "10A",
+				    "city": "São Paulo",
+				    "postal_code": "01000-000"
+				  }
+				}
+				""".formatted(suffix, email, initialPassword, login);
+
+		var createResult = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.post("/api/v1/users")
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(createBody))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+						.string("Location", org.hamcrest.Matchers.startsWith("/api/v1/users/")))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.type")
+						.value("CLIENTE"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.address.postal_code")
+						.value("01000-000"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.password")
+						.doesNotExist())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.passwordHash")
+						.doesNotExist())
+				.andReturn();
+		Number createdId = com.jayway.jsonpath.JsonPath.read(createResult.getResponse().getContentAsString(), "$.id");
+		long userId = createdId.longValue();
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.post("/api/v1/users")
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(createBody.replace(
+								"\"login\": \"" + login + "\"",
+								"\"login\": \"different." + suffix + "\"")))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isConflict())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.attribute")
+						.value("email"));
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.post("/api/v1/users")
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(createBody.replace(
+								"\"email\": \"" + email + "\"",
+								"\"email\": \"different." + suffix + "@example.invalid\"")))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isConflict())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.attribute")
+						.value("login"));
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.post("/api/v1/users")
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{}"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+
+		String updateBody = """
+				{
+				  "name": "Cliente API atualizado",
+				  "email": "%s",
+				  "login": "%s",
+				  "address": {
+				    "street": "Rua Atualizada",
+				    "number": "11",
+				    "city": "Campinas",
+				    "postal_code": "13000-000"
+				  }
+				}
+				""".formatted(email, login);
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.put("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(updateBody))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.name")
+						.value("Cliente API atualizado"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.type")
+						.value("CLIENTE"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.address.city")
+						.value("Campinas"))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.passwordHash")
+						.doesNotExist());
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.put("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + ownerToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(updateBody.replace("\"login\":", "\"password\":\"forbidden\", \"login\":")))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + ownerToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users")
+						.param("name", "Cliente API atualizado")
+						.param("page", "0")
+						.param("size", "10")
+						.header("Authorization", "Bearer " + ownerToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.totalElements")
+						.value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+
+		String clientToken = loginToken(login, initialPassword);
+		long ownerId = users.findByLogin("avaliador.integration").orElseThrow().id().orElseThrow();
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + clientToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users/" + ownerId)
+						.header("Authorization", "Bearer " + clientToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users")
+						.param("name", "Cliente")
+						.header("Authorization", "Bearer " + clientToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.put("/api/v1/users/" + ownerId + "/password")
+						.header("Authorization", "Bearer " + clientToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"currentPassword":"irrelevant","newPassword":"ClientPass456!"}
+								"""))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.put("/api/v1/users/" + userId + "/password")
+						.header("Authorization", "Bearer " + clientToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"currentPassword":"wrong","newPassword":"ClientPass456!"}
+								"""))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.put("/api/v1/users/" + userId + "/password")
+						.header("Authorization", "Bearer " + clientToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"currentPassword":"ClientPass123!","newPassword":"ClientPass456!"}
+								"""))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
+		loginToken(login, "ClientPass456!");
+
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.delete("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + clientToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.get("/api/v1/users/" + userId)
+						.header("Authorization", "Bearer " + ownerToken))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+	}
+
+	private String loginToken(String login, String password) throws Exception {
+		var result = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+						.post("/api/v1/auth/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"login":"%s","password":"%s"}
+								""".formatted(login, password)))
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+				.andReturn();
+		return com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(), "$.accessToken");
 	}
 
 	private org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoderForDifferentSecret() {

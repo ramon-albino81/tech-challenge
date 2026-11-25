@@ -1,16 +1,11 @@
 package br.com.fiap.techchallenge.usermanagement.adapter.in.web.auth;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.techchallenge.usermanagement.application.AuthenticateUser;
-import br.com.fiap.techchallenge.usermanagement.application.exception.InvalidCredentialsException;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,21 +25,35 @@ public class AuthController {
 
 	@PostMapping("/login")
 	@Operation(summary = "Autenticar usuário e emitir token JWT")
+	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(
+			mediaType = "application/json",
+			schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = LoginRequest.class),
+			examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+					value = "{\"login\":\"avaliador\",\"password\":\"AvaliacaoLocal!2026\"}")))
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Credenciais válidas"),
-			@ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+			@ApiResponse(responseCode = "200", description = "Credenciais válidas", content = @io.swagger.v3.oas.annotations.media.Content(
+					mediaType = "application/json",
+					schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = LoginResponse.class),
+					examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+							value = "{\"accessToken\":\"<jwt>\",\"tokenType\":\"Bearer\",\"expiresAt\":\"2026-01-01T10:15:00Z\"}"))),
+			@ApiResponse(responseCode = "400", description = "Dados de login inválidos", content = @io.swagger.v3.oas.annotations.media.Content(
+					mediaType = "application/problem+json",
+					schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = org.springframework.http.ProblemDetail.class),
+					examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+							value = "{\"type\":\"about:blank\",\"title\":\"Requisição inválida\",\"status\":400,\"detail\":\"Um ou mais campos não atendem aos critérios de validação.\"}"))),
+			@ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @io.swagger.v3.oas.annotations.media.Content(
+					mediaType = "application/problem+json",
+					schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = org.springframework.http.ProblemDetail.class),
+					examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+							value = "{\"type\":\"about:blank\",\"title\":\"Não autenticado\",\"status\":401,\"detail\":\"Login ou senha inválidos.\"}"))),
+			@ApiResponse(responseCode = "500", description = "Falha interna", content = @io.swagger.v3.oas.annotations.media.Content(
+					mediaType = "application/problem+json",
+					schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = org.springframework.http.ProblemDetail.class),
+					examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+							value = "{\"type\":\"about:blank\",\"title\":\"Erro interno\",\"status\":500,\"detail\":\"Não foi possível concluir a solicitação.\"}")))
 	})
 	public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 		var token = authenticateUser.execute(request.login(), request.password());
 		return new LoginResponse(token.value(), "Bearer", token.expiresAt());
-	}
-
-	@ExceptionHandler(InvalidCredentialsException.class)
-	public ResponseEntity<ProblemDetail> invalidCredentials() {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.UNAUTHORIZED,
-				"Login ou senha inválidos.");
-		problem.setTitle("Não autenticado");
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
 	}
 }

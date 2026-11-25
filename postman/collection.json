@@ -2,8 +2,854 @@
   "info": {
     "_postman_id": "62d9c8c0-7da5-4db4-b119-c13ad5a3b910",
     "name": "Tech Challenge FIAP - API de usuários",
-    "description": "Coleção inicial. Os cenários serão adicionados junto com os contratos da API.",
+    "description": "Fluxo local de avaliação. Use somente no ambiente não produtivo configurado no environment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": []
+  "item": [
+    {
+      "name": "Autenticação do dono",
+      "item": [
+        {
+          "name": "Login válido - dono",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"login\":\"{{evaluationLogin}}\",\"password\":\"{{evaluationPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login retorna 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('ownerToken', body.accessToken);",
+                  "const decodeBase64 = require('atob');",
+                  "const ownerPayload = body.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "pm.environment.set('ownerId', JSON.parse(decodeBase64(ownerPayload.padEnd(Math.ceil(ownerPayload.length / 4) * 4, '='))).sub);",
+                  "pm.test('Resposta contém bearer token e expiração', function () { pm.expect(body.tokenType).to.eql('Bearer'); pm.expect(body.expiresAt).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"login\":\"{{evaluationLogin}}\",\"password\":\"senha-incorreta\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credenciais inválidas retornam 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Erro usa ProblemDetail', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gerenciamento como dono",
+      "item": [
+        {
+          "name": "Criar cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('runId', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Criação retorna 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('createdUserId', body.id);",
+                  "pm.environment.set('clientLogin', 'cliente.' + pm.environment.get('runId'));",
+                  "pm.environment.set('clientId', body.id);",
+                  "pm.test('Location aponta para o recurso criado', function () { pm.expect(pm.response.headers.get('Location')).to.include('/api/v1/users/' + body.id); });",
+                  "pm.test('Perfil não expõe senha nem hash', function () { pm.expect(body).not.to.have.property('password'); pm.expect(body).not.to.have.property('passwordHash'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Cliente {{runId}}\",\"email\":\"cliente.{{runId}}@example.invalid\",\"password\":\"{{clientPassword}}\",\"login\":\"cliente.{{runId}}\",\"type\":\"CLIENTE\",\"address\":{\"street\":\"Rua Postman\",\"number\":\"10\",\"city\":\"São Paulo\",\"postal_code\":\"01000-000\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar com e-mail duplicado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Duplicado\",\"email\":\"cliente.{{runId}}@example.invalid\",\"password\":\"{{clientPassword}}\",\"login\":\"duplicado.email.{{runId}}\",\"type\":\"CLIENTE\",\"address\":{\"street\":\"Rua\",\"number\":\"1\",\"city\":\"São Paulo\",\"postal_code\":\"01000-000\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E-mail duplicado retorna 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Resposta identifica o atributo em conflito', function () { pm.expect(pm.response.json().attribute).to.eql('email'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar com login duplicado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Duplicado\",\"email\":\"duplicado.login.{{runId}}@example.invalid\",\"password\":\"{{clientPassword}}\",\"login\":\"cliente.{{runId}}\",\"type\":\"CLIENTE\",\"address\":{\"street\":\"Rua\",\"number\":\"1\",\"city\":\"São Paulo\",\"postal_code\":\"01000-000\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login duplicado retorna 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Resposta identifica o atributo em conflito', function () { pm.expect(pm.response.json().attribute).to.eql('login'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rejeitar campos obrigatórios ausentes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Campos ausentes retornam 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Erro usa ProblemDetail', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar usuário criado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{createdUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{createdUserId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Consulta retorna 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Consulta não expõe senha nem hash', function () { const body = pm.response.json(); pm.expect(body).not.to.have.property('password'); pm.expect(body).not.to.have.property('passwordHash'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?name=Cliente%20{{runId}}&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Cliente {{runId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Busca paginada retorna 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Resposta inclui metadados de paginação', function () { const body = pm.response.json(); pm.expect(body).to.have.property('page'); pm.expect(body).to.have.property('size'); pm.expect(body).to.have.property('totalElements'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Cliente atualizado {{runId}}\",\"email\":\"cliente.{{runId}}@example.invalid\",\"login\":\"cliente.{{runId}}\",\"address\":{\"street\":\"Rua Atualizada\",\"number\":\"20\",\"city\":\"Campinas\",\"postal_code\":\"13000-000\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{createdUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{createdUserId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Atualização de perfil retorna 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Tipo do usuário permanece inalterado', function () { pm.expect(pm.response.json().type).to.eql('CLIENTE'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rejeitar alteração de senha no perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Cliente atualizado {{runId}}\",\"email\":\"cliente.{{runId}}@example.invalid\",\"login\":\"cliente.{{runId}}\",\"password\":\"SenhaProibida123!\",\"address\":{\"street\":\"Rua Atualizada\",\"number\":\"20\",\"city\":\"Campinas\",\"postal_code\":\"13000-000\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{createdUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{createdUserId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Campo de senha proibido retorna 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gerenciamento como cliente",
+      "item": [
+        {
+          "name": "Login do cliente criado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"login\":\"cliente.{{runId}}\",\"password\":\"{{clientPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login do cliente retorna 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('clientToken', body.accessToken);",
+                  "const decodeBase64 = require('atob');",
+                  "const clientPayload = body.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "pm.environment.set('clientId', JSON.parse(decodeBase64(clientPayload.padEnd(Math.ceil(clientPayload.length / 4) * 4, '='))).sub);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente não pode buscar usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?name=Cliente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Cliente"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Busca por cliente retorna 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('Erro usa ProblemDetail', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente não pode alterar senha de outra conta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"irrelevante\",\"newPassword\":\"OutraSenha123!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{ownerId}}/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{ownerId}}",
+                "password"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Alteração de senha de outra conta retorna 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rejeitar senha atual incorreta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"senha-incorreta\",\"newPassword\":\"{{newClientPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{clientId}}/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{clientId}}",
+                "password"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Senha atual incorreta retorna 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar própria senha",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"{{clientPassword}}\",\"newPassword\":\"{{newClientPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{clientId}}/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{clientId}}",
+                "password"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Troca válida retorna 204 sem corpo', function () { pm.response.to.have.status(204); pm.expect(pm.response.text()).to.eql(''); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do cliente com nova senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"login\":\"cliente.{{runId}}\",\"password\":\"{{newClientPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Nova senha autentica o cliente', function () { pm.response.to.have.status(200); });",
+                  "pm.environment.set('clientToken', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir própria conta",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{clientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{clientId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exclusão própria retorna 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acesso protegido sem token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{ownerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{ownerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rota protegida sem token retorna 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Erro usa ProblemDetail', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
