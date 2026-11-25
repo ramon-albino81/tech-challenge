@@ -32,10 +32,10 @@
 
 ## 5. API, erros e documentação
 
-- [ ] 5.1 Aplicar `/java-springboot` e `/swagger-doc-creator`; implementar as rotas `POST /api/v1/auth/login`, `POST /api/v1/users`, `GET /api/v1/users/{id}`, `GET /api/v1/users?name=&page=&size=`, `PUT /api/v1/users/{id}`, `PUT /api/v1/users/{id}/password` e `DELETE /api/v1/users/{id}` com DTOs distintos e validação; verificar métodos, payloads, autorização e status `200`, `201` e `204` definidos na especificação.
-- [ ] 5.2 Padronizar erros com `application/problem+json`/`ProblemDetail` para `400`, `401`, `403`, `404`, `409` e `500`, sem informação interna; verificar status, corpo e ausência de SQL/segredos em testes MVC.
-- [ ] 5.3 Aplicar `/swagger-doc-creator` e `/java-springboot`; documentar todas as rotas em OpenAPI/Swagger, com exemplos de sucesso e erro, campos, autenticação e fluxo JWT; verificar documento OpenAPI e acesso do Swagger no ambiente de avaliação, com proteção/desativação em produção.
-- [ ] 5.4 Criar coleção `postman/collection.json` e `postman/environment.json` com `baseUrl` e testes de status; cobrir cadastro válido, e-mail/login duplicados, campos obrigatórios ausentes, troca de senha válida/inválida, atualização de perfil válida/inválida, busca por nome, login válido/inválido, JWT e acessos negados; verificar importação e execução da coleção.
+- [x] 5.1 Aplicar `/java-springboot` e `/swagger-doc-creator`; implementar as rotas `POST /api/v1/auth/login`, `POST /api/v1/users`, `GET /api/v1/users/{id}`, `GET /api/v1/users?name=&page=&size=`, `PUT /api/v1/users/{id}`, `PUT /api/v1/users/{id}/password` e `DELETE /api/v1/users/{id}` com DTOs distintos e validação; verificar métodos, payloads, autorização e status `200`, `201` e `204` definidos na especificação.
+- [x] 5.2 Padronizar erros com `application/problem+json`/`ProblemDetail` para `400`, `401`, `403`, `404`, `409` e `500`, sem informação interna; verificar status, corpo e ausência de SQL/segredos em testes MVC.
+- [x] 5.3 Aplicar `/swagger-doc-creator` e `/java-springboot`; documentar todas as rotas em OpenAPI/Swagger, com exemplos de sucesso e erro, campos, autenticação e fluxo JWT; verificar documento OpenAPI e acesso do Swagger no ambiente de avaliação, com proteção/desativação em produção.
+- [x] 5.4 Criar coleção `postman/collection.json` e `postman/environment.json` com `baseUrl` e testes de status; cobrir cadastro válido, e-mail/login duplicados, campos obrigatórios ausentes, troca de senha válida/inválida, atualização de perfil válida/inválida, busca por nome, login válido/inválido, JWT e acessos negados; verificar importação e execução da coleção.
 
 ## 6. Docker e configuração
 

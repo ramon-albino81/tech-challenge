@@ -77,6 +77,18 @@ Para validar a compilação, os testes e o empacotamento:
 
 A interface Swagger fica em `http://localhost:8080/swagger-ui.html`. Para obter um JWT, envie `POST /api/v1/auth/login` com `{"login":"avaliador","password":"AvaliacaoLocal!2026"}`. Use o campo `accessToken` da resposta como bearer token nas rotas protegidas. O token expira em 15 minutos. A documentação Swagger e seus endpoints podem ser desativados em produção por `SWAGGER_ENABLED=false`; o perfil `prod` já os desativa.
 
+Rotas disponíveis:
+
+- `POST /api/v1/auth/login`: autenticação e emissão de JWT.
+- `POST /api/v1/users`: criação por `DONO_RESTAURANTE`, com resposta `201` e header `Location`.
+- `GET /api/v1/users/{id}`: consulta permitida ao dono ou ao titular.
+- `GET /api/v1/users?name={nome}&page=0&size=20`: busca paginada exclusiva do dono; `size` máximo `100`.
+- `PUT /api/v1/users/{id}`: atualização de perfil sem senha ou tipo; campos desconhecidos são rejeitados.
+- `PUT /api/v1/users/{id}/password`: troca da própria senha com confirmação da senha atual.
+- `DELETE /api/v1/users/{id}`: exclusão pelo dono ou pelo titular da conta.
+
+Erros da API são retornados como `application/problem+json`. Importe `postman/collection.json` e `postman/environment.json` no Postman e execute os requests na ordem apresentada. O environment aponta para `http://localhost:8080` e contém somente credenciais locais/não produtivas; a coleção captura os tokens, cria uma conta temporária e verifica os fluxos de autorização, duplicidade, validação, alteração de senha e exclusão.
+
 ## Integrante
 
 - Ramon Albino — desenvolvimento individual
