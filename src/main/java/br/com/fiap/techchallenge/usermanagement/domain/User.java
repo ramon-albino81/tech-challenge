@@ -79,6 +79,15 @@ public final class User {
 		return new User(persistedId, name, email, login, passwordHash, type, lastModifiedAt, address);
 	}
 
+	public User withProfile(String updatedName, String updatedEmail, String updatedLogin,
+			LocalDateTime updatedAt, Address updatedAddress) {
+		return new User(id, updatedName, updatedEmail, updatedLogin, passwordHash, type, updatedAt, updatedAddress);
+	}
+
+	public User withPasswordHash(String updatedPasswordHash, LocalDateTime updatedAt) {
+		return new User(id, name, email, login, updatedPasswordHash, type, updatedAt, address);
+	}
+
 	private static String normalizeEmail(String value) {
 		String email = required("email", value, 254).toLowerCase(Locale.ROOT);
 		if (!EMAIL_PATTERN.matcher(email).matches()) {
