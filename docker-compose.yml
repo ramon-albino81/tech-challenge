@@ -6,21 +6,26 @@ services:
     image: tech-challenge:local
     environment:
       APP_ENV: ${APP_ENV:-LOCAL_NAO_PRODUTIVO}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-evaluation}
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-tech_challenge}?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-tech_app}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_SECURITY_USER_NAME: ${LOCAL_ADMIN_USER:-local-admin}
-      SPRING_SECURITY_USER_PASSWORD: ${LOCAL_ADMIN_PASSWORD:?Defina LOCAL_ADMIN_PASSWORD no arquivo .env}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:?Defina JWT_SECRET_BASE64 no arquivo .env}
+      EVALUATION_USER_NAME: ${EVALUATION_USER_NAME:-Avaliador Local}
+      EVALUATION_USER_EMAIL: ${EVALUATION_USER_EMAIL:-avaliador@example.invalid}
+      EVALUATION_USER_LOGIN: ${EVALUATION_USER_LOGIN:-avaliador}
+      EVALUATION_USER_PASSWORD: ${EVALUATION_USER_PASSWORD:?Defina EVALUATION_USER_PASSWORD no arquivo .env}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/login"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/v3/api-docs"]
       interval: 10s
       timeout: 5s
       retries: 12

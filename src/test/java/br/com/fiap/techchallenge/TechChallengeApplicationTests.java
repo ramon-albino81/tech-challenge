@@ -9,7 +9,8 @@ import br.com.fiap.techchallenge.usermanagement.adapter.out.persistence.JpaUserS
 
 @SpringBootTest(properties = {
 	"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration," +
-		"org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
+		"org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
+	"app.security.jwt.secret-base64=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
 })
 class TechChallengeApplicationTests {
 

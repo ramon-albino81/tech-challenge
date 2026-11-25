@@ -6,12 +6,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import br.com.fiap.techchallenge.usermanagement.application.ChangeOwnPassword;
+import br.com.fiap.techchallenge.usermanagement.application.AuthenticateUser;
 import br.com.fiap.techchallenge.usermanagement.application.CreateUser;
 import br.com.fiap.techchallenge.usermanagement.application.DeleteUser;
 import br.com.fiap.techchallenge.usermanagement.application.GetUser;
 import br.com.fiap.techchallenge.usermanagement.application.SearchUsers;
 import br.com.fiap.techchallenge.usermanagement.application.UpdateUserProfile;
 import br.com.fiap.techchallenge.usermanagement.application.port.out.PasswordHasher;
+import br.com.fiap.techchallenge.usermanagement.application.port.out.AccessTokenIssuer;
 import br.com.fiap.techchallenge.usermanagement.application.port.out.TransactionBoundary;
 import br.com.fiap.techchallenge.usermanagement.application.port.out.UserStore;
 
@@ -56,5 +58,15 @@ class UserManagementConfiguration {
 	@Bean
 	DeleteUser deleteUser(UserStore users, TransactionBoundary transactions) {
 		return new DeleteUser(users, transactions);
+	}
+
+	@Bean
+	AuthenticateUser authenticateUser(
+			UserStore users,
+			PasswordHasher passwordHasher,
+			AccessTokenIssuer tokens,
+			TransactionBoundary transactions
+	) {
+		return new AuthenticateUser(users, passwordHasher, tokens, transactions);
 	}
 }

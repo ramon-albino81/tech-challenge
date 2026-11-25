@@ -2,6 +2,7 @@ package br.com.fiap.techchallenge.usermanagement.application;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import br.com.fiap.techchallenge.usermanagement.application.exception.DuplicateUserAttribute;
@@ -53,6 +54,9 @@ public final class CreateUser {
 		if (password == null || password.isBlank()
 				|| password.codePointCount(0, password.length()) < 8) {
 			throw new DomainValidationException("password must contain at least 8 characters");
+		}
+		if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+			throw new DomainValidationException("password must not exceed 72 UTF-8 bytes");
 		}
 	}
 
